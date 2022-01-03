@@ -8,7 +8,8 @@ export const typeDefs = gql`
         postCreate(post: PostInputType!): PostOutputType!
         postUpdate(id: String!, post: PostInputType!): PostOutputType!
         postDelete(id: String!): PostOutputType!
-        signup(email: String!, password: String!, name: String!): AuthOutputType!
+        signUp(name: String!, auth: AuthCredentials!): AuthOutputType!
+        signIn(auth: AuthCredentials!): AuthOutputType!
     }
 
     type Error {
@@ -51,5 +52,10 @@ export const typeDefs = gql`
     type AuthOutputType {
         errors: [Error!]!
         token: String
+    }
+
+    input AuthCredentials {
+        email: String!
+        password: String!
     }
 `;

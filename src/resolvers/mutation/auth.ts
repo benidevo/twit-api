@@ -1,4 +1,3 @@
-import { User } from '@prisma/client';
 import validator from 'validator';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
@@ -8,9 +7,18 @@ config();
 import { Context } from '../../index';
 
 interface AuthInputDto {
-    email: string;
+    auth: {
+        email: string;
+        password: string;
+    };
     name: string;
-    password: string;
+}
+
+interface SignInDto {
+    auth: {
+        email: string;
+        password: string;
+    };
 }
 interface AuthOutputDto {
     errors: {
@@ -20,11 +28,12 @@ interface AuthOutputDto {
 }
 
 export const authMutation = {
-    signup: async (
+    signUp: async (
         parent: any,
-        { email, name, password }: AuthInputDto,
+        { auth, name }: AuthInputDto,
         { prisma }: Context
     ): Promise<AuthOutputDto> => {
+        const { email, password } = auth;
         if (!email || !name || !password) {
             return {
                 errors: [
@@ -77,7 +86,8 @@ export const authMutation = {
 
             const token = await jwt.sign(
                 { userId: user.id },
-                process.env.JWT_SECRET
+                process.env.JWT_SECRET,
+                { expiresIn: '1d' }
             );
             return {
                 errors: [],
@@ -103,5 +113,50 @@ export const authMutation = {
                 token: null
             };
         }
+    },
+
+    signIn: async (parent, { auth }: SignInDto, { prisma }: Context) => {
+        const { email, password } = auth;
+
+        const user = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        });
+
+        if (!user) {
+            return {
+                errors: [
+                    {
+                        message: 'invalid credentials'
+                    }
+                ],
+                token: null
+            };
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return {
+                errors: [
+                    {
+                        message: 'invalid credentials'
+                    }
+                ],
+                token: null
+            };
+        }
+
+        const token = await jwt.sign(
+            { userId: user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        return {
+            errors: [],
+            token
+        };
     }
 };
