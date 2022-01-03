@@ -9,7 +9,7 @@ export const typeDefs = gql`
   }
 
   type Error {
-    message: String!
+    message: String
   }
 
   type User {
@@ -32,7 +32,7 @@ export const typeDefs = gql`
 
   type PostOutputType {
     errors: [Error!]!
-    data: Post
+    post: Post
   }
 
   type Profile {

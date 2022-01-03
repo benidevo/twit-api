@@ -1,16 +1,35 @@
+import { Post } from '@prisma/client';
 import { Context } from '../index';
 
-interface PostCreateDto {
+interface PostCreateInputDto {
   title: string;
   content: string;
 }
+interface PostCreateOutputDto {
+  errors: {
+    message: string;
+  }[];
+  post: Post | null;
+}
+
 export const Mutation = {
   postCreate: async (
     parent,
-    { title, content }: PostCreateDto,
+    { title, content }: PostCreateInputDto,
     { prisma }: Context
-  ) => {
-    const user = await prisma.post.create({
+  ): Promise<PostCreateOutputDto> => {
+    if (!title || !content) {
+      return {
+        errors: [
+          {
+            message: 'title and content are required',
+          }
+        ],
+        post: null
+      };
+    }
+
+    const post = await prisma.post.create({
       data: {
         title,
         content,
@@ -20,7 +39,7 @@ export const Mutation = {
 
     return {
       errors: [],
-      data: user
+      post
     };
   }
 };
