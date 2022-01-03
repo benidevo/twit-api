@@ -5,7 +5,8 @@ export const typeDefs = gql`
     posts: [Post!]!
   }
   type Mutation {
-    postCreate(title: String!, content: String!): PostOutputType!
+    postCreate(post: PostInputType!): PostOutputType!
+    postUpdate(id: String!, post: PostInputType!): PostOutputType!
   }
 
   type Error {
@@ -39,5 +40,10 @@ export const typeDefs = gql`
     id: ID!
     bio: String!
     user: User!
+  }
+
+  input PostInputType {
+    title: String
+    content: String
   }
 `;

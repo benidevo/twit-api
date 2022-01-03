@@ -2,10 +2,20 @@ import { Post } from '@prisma/client';
 import { Context } from '../index';
 
 interface PostCreateInputDto {
-  title: string;
-  content: string;
+  post: {
+    title: string;
+    content: string;
+  };
 }
-interface PostCreateOutputDto {
+
+interface PostUpdateInputDto {
+  id: string;
+  post: {
+    title: string;
+    content: string;
+  };
+}
+interface PostOutputDto {
   errors: {
     message: string;
   }[];
@@ -15,14 +25,15 @@ interface PostCreateOutputDto {
 export const Mutation = {
   postCreate: async (
     parent,
-    { title, content }: PostCreateInputDto,
+    { post: input }: PostCreateInputDto,
     { prisma }: Context
-  ): Promise<PostCreateOutputDto> => {
+  ): Promise<PostOutputDto> => {
+    const { title, content } = input;
     if (!title || !content) {
       return {
         errors: [
           {
-            message: 'title and content are required',
+            message: 'title and content are required'
           }
         ],
         post: null
@@ -36,6 +47,41 @@ export const Mutation = {
         authorId: '268a8e6e-a9a6-4a05-90e1-a689abc7c096'
       }
     });
+
+    return {
+      errors: [],
+      post
+    };
+  },
+
+  postUpdate: async (
+    parent,
+    { id, post: input }: PostUpdateInputDto,
+    { prisma }: Context
+  ): Promise<PostOutputDto> => {
+    let post: Post | null;
+    try {
+      post = await prisma.post.update({
+        where: {
+          id
+        },
+        data: {
+         ...input
+        }
+      });
+    } catch (err) {
+      // check if post exists
+      if (err.code === 'P2025') {
+        return {
+          errors: [
+            {
+              message: 'post not found'
+            }
+          ],
+          post: null
+        };
+      }
+    }
 
     return {
       errors: [],
