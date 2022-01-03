@@ -8,6 +8,8 @@ export const typeDefs = gql`
         postCreate(post: PostInputType!): PostOutputType!
         postUpdate(id: String!, post: PostInputType!): PostOutputType!
         postDelete(id: String!): PostOutputType!
+        postPublish(id: String!): PostOutputType!
+        postUnpublish(id: String!): PostOutputType!
         signUp(name: String!, auth: AuthCredentials!): AuthOutputType!
         signIn(auth: AuthCredentials!): AuthOutputType!
     }

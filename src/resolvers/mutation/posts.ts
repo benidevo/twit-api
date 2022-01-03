@@ -157,5 +157,97 @@ export const postMutation = {
             errors: [],
             post: null
         };
+    },
+
+    postPublish: async (parent, { id }, { prisma, userId }: Context) => {
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        message: 'unauthorized access'
+                    }
+                ],
+                post: null
+            };
+        }
+
+        const error = await canUserMutatePost({
+            postId: id,
+            userId,
+            prisma
+        });
+
+        if (error) return error;
+
+        try {
+            const post = await prisma.post.update({
+                where: {
+                    id
+                },
+                data: {
+                    published: true
+                }
+            });
+
+            return {
+                errors: [],
+                post
+            };
+        } catch (err) {
+            return {
+                errors: [
+                    {
+                        message: err.meta.cause
+                    }
+                ],
+                post: null
+            };
+        }
+    },
+
+    postUnpublish: async (parent, { id }, { prisma, userId }: Context) => {       
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        message: 'unauthorized access'
+                    }
+                ],
+                post: null
+            };
+        }
+
+        const error = await canUserMutatePost({
+            postId: id,
+            userId,
+            prisma
+        });
+
+        if (error) return error;
+
+        try {
+            const post = await prisma.post.update({
+                where: {
+                    id
+                },
+                data: {
+                    published: false
+                }
+            });
+
+            return {
+                errors: [],
+                post
+            };
+        } catch (err) {
+            return {
+                errors: [
+                    {
+                        message: err.meta.cause
+                    }
+                ],
+                post: null
+            };
+        }
     }
 };
