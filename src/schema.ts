@@ -7,7 +7,8 @@ export const typeDefs = gql`
     type Mutation {
         postCreate(post: PostInputType!): PostOutputType!
         postUpdate(id: String!, post: PostInputType!): PostOutputType!
-		postDelete(id: String!): PostOutputType!
+        postDelete(id: String!): PostOutputType!
+        signup(email: String!, password: String!, name: String!): AuthOutputType!
     }
 
     type Error {
@@ -37,14 +38,18 @@ export const typeDefs = gql`
         post: Post
     }
 
+    input PostInputType {
+        title: String
+        content: String
+    }
     type Profile {
         id: ID!
         bio: String!
         user: User!
     }
 
-    input PostInputType {
-        title: String
-        content: String
+    type AuthOutputType {
+        errors: [Error!]!
+        token: String
     }
 `;
