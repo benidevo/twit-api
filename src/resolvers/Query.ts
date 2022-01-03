@@ -1,3 +1,11 @@
 export const Query = {
-  hello: () => 'Hello world!'
+  posts: (parent, args, { prisma }) => {
+    return prisma.post.findMany({
+      orderBy: [
+        {
+          createdAt: 'desc'
+        }
+      ]
+    });
+  }
 };
