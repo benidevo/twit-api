@@ -1,5 +1,6 @@
 import { Post } from '@prisma/client';
 import { Context } from '../../index';
+import { canUserMutatePost } from '../../utils/permissions';
 
 interface PostCreateInputDto {
     post: {
@@ -26,8 +27,19 @@ export const postMutation = {
     postCreate: async (
         parent,
         { post: input }: PostCreateInputDto,
-        { prisma }: Context
+        { prisma, userId }: Context
     ): Promise<PostOutputDto> => {
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        message: 'you must be logged in to create a post'
+                    }
+                ],
+                post: null
+            };
+        }
+
         const { title, content } = input;
         if (!title || !content) {
             return {
@@ -44,7 +56,7 @@ export const postMutation = {
             data: {
                 title,
                 content,
-                authorId: '268a8e6e-a9a6-4a05-90e1-a689abc7c096'
+                authorId: userId
             }
         });
 
@@ -57,11 +69,29 @@ export const postMutation = {
     postUpdate: async (
         parent,
         { id, post: input }: PostUpdateInputDto,
-        { prisma }: Context
+        { prisma, userId }: Context
     ): Promise<PostOutputDto> => {
-        let post: Post | null;
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        message: 'unauthorized access'
+                    }
+                ],
+                post: null
+            };
+        }
+
+        const errors = await canUserMutatePost({
+            postId: id,
+            userId,
+            prisma
+        });
+
+        if (errors) return errors;
+
         try {
-            post = await prisma.post.update({
+            const post = await prisma.post.update({
                 where: {
                     id
                 },
@@ -69,6 +99,11 @@ export const postMutation = {
                     ...input
                 }
             });
+
+            return {
+                errors: [],
+                post
+            };
         } catch (err) {
             return {
                 errors: [
@@ -81,7 +116,26 @@ export const postMutation = {
         }
     },
 
-    postDelete: async (parent, { id }, { prisma }: Context) => {
+    postDelete: async (parent, { id }, { prisma, userId }: Context) => {
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        message: 'unauthorized access'
+                    }
+                ],
+                post: null
+            };
+        }
+
+        const error = await canUserMutatePost({
+            postId: id,
+            userId,
+            prisma
+        });
+
+        if (error) return error;
+
         try {
             await prisma.post.delete({
                 where: {
